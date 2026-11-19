@@ -1,4 +1,4 @@
-# Bitirme Projesi 1-2: EKG Atım Sınıflandırmasında Sınıf Dengesizliği Çözümü
+# Bitirme Projesi 1: EKG Atım Sınıflandırmasında Sınıf Dengesizliği Çözümü
 
 **Öğrenci:** Rafi Erkoç (Elektrik-Elektronik Mühendisliği)  
 **Danışman:** Arş. Gör. Meral Kılıçarslan  
@@ -33,6 +33,25 @@ Veri sızıntısını (data leakage) engellemek amacıyla aynı hastanın atıml
 
 ### Temel Model Karmaşıklık Matrisi (Confusion Matrix)
 ![Karmaşıklık Matrisi](karmasiklik_matrisi.png)
+
+
+---
+
+## 🛠️ Kullanılan Araçlar ve Yazılım Altyapısı
+Bu çalışma tamamen **Python 3**, **Scikit-Learn**, **Imbalanced-Learn** ve **WFDB (PhysioNet)** kütüphaneleri kullanılarak geliştirilmiştir. Model olarak **Random Forest (Rastgele Orman)** algoritması tercih edilmiştir.
+
+## 📈 Aşama 4: Dengeleme Yöntemlerinin Karşılaştırma Sonuçları
+
+Veri sızıntısını önlemek amacıyla dengeleme yöntemleri **yalnızca eğitim kümesine (DS1)** uygulanmış, test kümesine (DS2 - 49.683 atım) kesinlikle dokunulmamıştır.
+
+| Model | S Sınıfı Duyarlılık (Recall) | S Sınıfı F1 | V Sınıfı Duyarlılık (Recall) | V Sınıfı F1 | Makro-Ortalama F1 |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **1. Temel Model (Baseline)** | 0.022 | 0.038 | 0.753 | 0.736 | **0.460** |
+| **2. Sınıf Ağırlıklı (Class-Weight)** | 0.019 | 0.033 | 0.743 | 0.736 | **0.447** |
+| **3. Aşırı Örnekleme (Oversampled)** | **0.025** | **0.041** | **0.776** | 0.701 | **0.444** |
+
+### Karmaşıklık Matrisleri
+![Karşılaştırma Matrisleri](karsilastirma_matrisleri.png)
 
 ---
 
