@@ -1,0 +1,4 @@
+﻿Model;N_Duyarlilik;N_Kesinlik;N_F1;S_Duyarlilik;S_Kesinlik;S_F1;V_Duyarlilik;V_Kesinlik;V_F1;F_Duyarlilik;F_Kesinlik;F_F1;Makro_F1
+1. Temel Model (Baseline);0,956;0,944;0,950;0,022;0,153;0,038;0,753;0,720;0,736;0,245;0,076;0,116;0,460
+2. Sinif Agirlikli (Class-Weight);0,964;0,942;0,953;0,019;0,150;0,033;0,743;0,730;0,736;0,108;0,046;0,064;0,447
+3. Asiri Ornekleme (Oversampled);0,938;0,946;0,942;0,025;0,119;0,041;0,776;0,639;0,701;0,229;0,057;0,092;0,444
