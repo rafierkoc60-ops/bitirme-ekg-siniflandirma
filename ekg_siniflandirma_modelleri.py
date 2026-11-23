@@ -1,15 +1,12 @@
 ﻿"""
-Bitirme Projesi 1-2 (2026-2027 Guz)
-EKG Sinyallerinde Sinif Dengesizligi Altinda Nadir Aritmi Siniflandirmasi
-Ogrenci: Rafi Erkoc
-Danisman: Ars. Gor. Ceylan Cicek
-
-Kullanilan Araclar ve Kutuphaneler:
-- Python 3
-- Scikit-Learn (RandomForestClassifier)
-- Imbalanced-Learn (RandomOverSampler)
-- WFDB (Waveform Database library for PhysioNet)
-- NumPy, Pandas, Matplotlib, Seaborn
+=============================================================================
+BİTİRME PROJESİ 1-2 (2026-2027 GÜZ)
+Proje Başlığı: EKG Atım Sınıflandırmasında Nadir Aritmi Sınıflarının Başarısını
+               Sınıf Dengeleme Yöntemleriyle İyileştirme
+Öğrenci: Rafi Erkoç (223204038)
+Danışman: Arş. Gör. Dr. Meral Kılıçarslan Ouach
+Kullanılan Araçlar: Python 3, Scikit-Learn, Imbalanced-Learn, WFDB, Pandas, NumPy
+=============================================================================
 """
 
 import wfdb
@@ -21,15 +18,15 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 from imblearn.over_sampling import RandomOverSampler
 
-# 1. AAMI 4 ANA SINIF ESLEMESI
+# 1. AAMI EC57 Standart 4 Ana Sınıf Eşlemesi
 AAMI_MAPPING = {
-    'N': 'N', 'L': 'N', 'R': 'N', 'e': 'N', 'j': 'N',
-    'A': 'S', 'a': 'S', 'J': 'S', 'S': 'S',
-    'V': 'V', 'E': 'V',
-    'F': 'F'
+    'N': 'N', 'L': 'N', 'R': 'N', 'e': 'N', 'j': 'N',          # Normal grubu
+    'A': 'S', 'a': 'S', 'J': 'S', 'S': 'S',                     # Supraventriküler ektopik (Nadir)
+    'V': 'V', 'E': 'V',                                         # Ventriküler ektopik (Nadir)
+    'F': 'F'                                                    # Füzyon (Çok nadir)
 }
 
-# 2. HASTA-BAZLI (INTER-PATIENT) AYRIM (Chazal et al. Standardi)
+# 2. de Chazal et al. (2004) Hasta-Bazlı (Inter-Patient) Ayrım
 DS1_TRAIN = ['101', '106', '108', '109', '112', '115', '118', '119', 
              '201', '203', '205', '207', '208', '209', '215', '220', '223', '230']
 
@@ -62,39 +59,56 @@ def extract_features(records):
     return np.array(X), np.array(y)
 
 def main():
-    print("--- 1. Oznitelikler Cikariliyor (DS1 Egitim & DS2 Test) ---")
+    print("=== 1. VERİ YÜKLEME VE HASTA-BAZLI ÖZNİTELİK ÇIKARIMI ===")
     X_train, y_train = extract_features(DS1_TRAIN)
     X_test, y_test = extract_features(DS2_TEST)
     classes = ['N', 'S', 'V', 'F']
 
-    print(f"Egitim Atim Sayisi: {len(X_train)} | Test Atim Sayisi: {len(X_test)}")
-    print("NOT: Veri sizintisini onlemek icin dengeleme YALNIZCA egitim kumesine uygulanir.")
+    print(f"DS1 Eğitim Atım Sayısı: {len(X_train)}")
+    print(f"DS2 Test Atım Sayısı  : {len(X_test)} (Test kümesine veri sızıntısı YOK!)")
 
     # Model 1: Temel Model (Dengeleme Yok)
-    print("\n[1/3] Temel Model (Baseline) egitiliyor...")
+    print("\n[1/3] Temel Model (Baseline) eğitiliyor...")
     m1 = RandomForestClassifier(n_estimators=100, random_state=42)
     m1.fit(X_train, y_train)
     y_pred_m1 = m1.predict(X_test)
 
-    # Model 2: Sinif Agirlikli Model
-    print("[2/3] Sinif Agirlikli Model (Class-Weight) egitiliyor...")
+    # Model 2: Sınıf Ağırlıklı Model
+    print("[2/3] Sınıf Ağırlıklı Model (Class-Weight) eğitiliyor...")
     m2 = RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42)
     m2.fit(X_train, y_train)
     y_pred_m2 = m2.predict(X_test)
 
-    # Model 3: Yalniz Egitimde Asiri Ornekleme
-    print("[3/3] Yalniz Egitim Kumesinde Asiri Ornekleme (Oversampling) uygulaniyor...")
+    # Model 3: Yalnız Eğitimde Aşırı Örnekleme
+    print("[3/3] Yalnız Eğitim Kümesinde Aşırı Örnekleme (RandomOverSampler) uygulanıyor...")
     ros = RandomOverSampler(random_state=42)
     X_train_res, y_train_res = ros.fit_resample(X_train, y_train)
     m3 = RandomForestClassifier(n_estimators=100, random_state=42)
     m3.fit(X_train_res, y_train_res)
     y_pred_m3 = m3.predict(X_test)
 
-    # Sonuclari Raporlama
-    models = [('Temel Model', y_pred_m1), ('Sinif Agirlikli', y_pred_m2), ('Asiri Ornekleme', y_pred_m3)]
-    for name, pred in models:
-        f1 = f1_score(y_test, pred, average='macro')
-        print(f"\n>> {name} Makro-F1: {f1:.3f}")
+    # Karşılaştırma Metrikleri ve CSV Üretimi (Hocanın İstediği Satırlar)
+    def get_metrics(y_true, y_pred, name):
+        rep = classification_report(y_true, y_pred, labels=classes, output_dict=True, zero_division=0)
+        res = {'Model': name}
+        for c in classes:
+            res[f'{c}_Recall'] = round(rep[c]['recall'], 3)
+            res[f'{c}_Precision'] = round(rep[c]['precision'], 3)
+            res[f'{c}_F1'] = round(rep[c]['f1-score'], 3)
+        res['Makro_F1'] = round(f1_score(y_true, y_pred, average='macro', zero_division=0), 3)
+        return res
+
+    results = [
+        get_metrics(y_test, y_pred_m1, '1. Temel Model (Baseline)'),
+        get_metrics(y_test, y_pred_m2, '2. Sınıf Ağırlıklı (Class-Weight)'),
+        get_metrics(y_test, y_pred_m3, '3. Aşırı Örnekleme (Oversampled)')
+    ]
+
+    df_comp = pd.DataFrame(results)
+    csv_file = 'karsilastirma_tablosu.csv'
+    df_comp.to_csv(csv_file, index=False, sep=';', encoding='utf-8-sig')
+    print(f"\nKarşılaştırma CSV dosyası başarıyla üretildi: {csv_file}")
+    print(df_comp[['Model', 'S_Recall', 'S_F1', 'V_Recall', 'V_F1', 'Makro_F1']])
 
 if __name__ == '__main__':
     main()
